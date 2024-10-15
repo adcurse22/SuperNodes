@@ -8,6 +8,8 @@ from datetime import datetime
 from PIL import Image
 import io
 import json
+
+
 class AnyType(str):
     """A special class that is always equal in not equal comparisons. Credit to pythongosssss"""
 
@@ -17,8 +19,10 @@ class AnyType(str):
     def __ne__(self, __value: object) -> bool:
         return False
 
+
 any = AnyType("*")
 CUSTOM_CATEGORY = "comfyui_superduperai"
+
 
 class SuperDuperVision:
     def __init__(self):
@@ -36,22 +40,22 @@ Return as dict:
 2. gender from ['male','female','no']
 
 Example answer: {"index": 1, "gender": "female"}
- 
+
 """
         return {
             "required": {
                 "images": ("IMAGE",),
-                "custom_prompt": ("STRING", {"multiline": True, "default":default_prompt}),
+                "custom_prompt": ("STRING", {"multiline": True, "default": default_prompt}),
             }
         }
 
     RETURN_TYPES = (
         "STRING",  # Full response content
         "STRING",  # Extracted summary (first two sentences)
-        "IMAGE",   # Faded image tensor
+        "IMAGE",  # Faded image tensor
         # "INTEGER", #RETURN INT AS OUTPUT
     )
-    RETURN_NAMES = ("full_response", "summary",)
+    RETURN_NAMES = ("full_response",)
     FUNCTION = "analyze_images"
     CATEGORY = CUSTOM_CATEGORY
 
@@ -158,13 +162,13 @@ Example answer: {"index": 1, "gender": "female"}
         return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
     def analyze_images(
-        self,
-        images,
-        custom_prompt="",
-        additive_prompt="",
-        dynamic_prompt=False,
-        words=100,
-        fade_percentage=15.0,
+            self,
+            images,
+            custom_prompt="",
+            additive_prompt="",
+            dynamic_prompt=False,
+            words=100,
+            fade_percentage=15.0,
     ):
         try:
             if not dynamic_prompt:
@@ -226,44 +230,51 @@ Example answer: {"index": 1, "gender": "female"}
                 self.pil2tensor(error_image)
             )
 
+
 class SuperDuperReactorOptions:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "input_faces_index": (any, {})
-
+                "input_faces_index": (any,),
             },
         }
-
 
     RETURN_TYPES = ("OPTIONS",)
     RETURN_NAMES = ("options",)
     FUNCTION = "execute"
     CATEGORY = CUSTOM_CATEGORY
 
-    def execute(self, input_faces_gpt):
-        json_input = json.loads((input_faces_gpt))
-        if not input_faces_gpt:
-            input_faces_index = 0
+    def execute(self,input_faces_index=None):
+        if input_faces_index:
+            json_input = json.loads(input_faces_index)
+            input_faces_index = json_input.get("index", 0)
+            detect_gender_input = json_input.get("gender", 'no')
+        else:
+            input_faces_index = input_faces_index or 0
+
+            detect_gender_input = 'no'
+
         options = {
-            "input_faces_order":"left-right",
+            "input_faces_order": "left-right",
             "input_faces_index": str(input_faces_index),
-            "detect_gender_input":"no",
-            "source_faces_order":"left-right",
-            "source_faces_index":"0",
-            "detect_gender_source":"no",
-            "console_log_level":"1",
+            "detect_gender_input":'no',
+            "source_faces_order": "left-right",
+            "source_faces_index": "0",
+            "detect_gender_source": "no",
+            "console_log_level": "1",
         }
+
         return (options,)
 
+
 NODE_CLASS_MAPPINGS = {
-    "SuperDuperVision":SuperDuperVision,  
-    "SuperDuperReactorOptions":SuperDuperReactorOptions,
+    "SuperDuperVision": SuperDuperVision,
+    "SuperDuperReactorOptions": SuperDuperReactorOptions,
 
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SuperDuperVision":"SuperDuperVision",
-    "SuperDuperReactorOptions":"SuperDuperReactorOptions",
+    "SuperDuperVision": "SuperDuperVision",
+    "SuperDuperReactorOptions": "SuperDuperReactorOptions",
 }
